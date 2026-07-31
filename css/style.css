@@ -20,6 +20,7 @@
 
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
+section[id]{scroll-margin-top:92px;}
 body{
   margin:0;
   font-family:var(--sans);
@@ -104,6 +105,7 @@ ul{list-style:none;margin:0;padding:0;}
   transition:color .2s ease;
 }
 .main-nav a:hover{color:var(--gold);}
+.main-nav a.active{color:var(--gold);}
 .nav-order{color:var(--gold-soft) !important;font-weight:600 !important;}
 .nav-call{
   background:var(--red);
@@ -277,14 +279,64 @@ ul{list-style:none;margin:0;padding:0;}
   gap:2rem;
   align-items:start;
 }
-.order-category{margin-bottom:2.2rem;}
-.order-category h3{
-  color:var(--gold);
-  font-size:1.1rem;
-  border-bottom:1px solid rgba(224,179,86,.25);
-  padding-bottom:.5rem;
-  margin-bottom:.2rem;
+.order-hint-top{color:var(--cream-dim);font-size:.85rem;font-style:italic;margin-bottom:1.4rem;}
+
+.order-category{
+  margin-bottom:1rem;
+  border:1px solid rgba(224,179,86,.2);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:rgba(255,255,255,.02);
 }
+.order-cat-toggle{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:var(--cream);
+  padding:1rem 1.2rem;
+  text-align:left;
+  font-family:var(--sans);
+}
+.order-cat-toggle:hover{background:rgba(224,179,86,.06);}
+.order-cat-name{
+  color:var(--gold);
+  font-family:var(--serif);
+  font-size:1.15rem;
+  font-weight:700;
+}
+.order-cat-badge{
+  margin-left:auto;
+  background:var(--red);
+  color:var(--cream);
+  font-size:.72rem;
+  font-weight:700;
+  padding:.25rem .6rem;
+  border-radius:999px;
+  white-space:nowrap;
+}
+.order-cat-chevron{
+  color:var(--gold);
+  font-size:.9rem;
+  transition:transform .25s ease;
+  flex-shrink:0;
+}
+.order-category.open .order-cat-chevron{transform:rotate(180deg);}
+
+.order-cat-panel{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows .3s ease;
+}
+.order-category.open .order-cat-panel{grid-template-rows:1fr;}
+.order-cat-panel-inner{
+  overflow:hidden;
+  padding:0 1.2rem;
+}
+.order-category.open .order-cat-panel-inner{padding:.2rem 1.2rem 1.2rem;}
 .order-category-sub{
   font-size:.72rem;
   text-transform:uppercase;

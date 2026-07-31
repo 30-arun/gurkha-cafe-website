@@ -46,7 +46,32 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   initOrderBuilder();
+  initScrollSpy();
 });
+
+function initScrollSpy() {
+  var sections = document.querySelectorAll('section[id]');
+  var navLinks = document.querySelectorAll('.main-nav a[href^="#"]');
+  if (!sections.length || !navLinks.length || !('IntersectionObserver' in window)) return;
+
+  var linkFor = {};
+  navLinks.forEach(function (link) {
+    linkFor[link.getAttribute('href').slice(1)] = link;
+  });
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var link = linkFor[entry.target.id];
+      if (!link) return;
+      if (entry.isIntersecting) {
+        navLinks.forEach(function (l) { l.classList.remove('active'); });
+        link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+
+  sections.forEach(function (section) { observer.observe(section); });
+}
 
 function initOrderBuilder() {
   var itemsContainer = document.getElementById('order-items');
@@ -194,33 +219,85 @@ function initOrderBuilder() {
   }
 
   var rowResetters = [];
+  var categoryMeta = [];
 
-  MENU.forEach(function (group) {
+  var hint = document.createElement('p');
+  hint.className = 'order-hint-top';
+  hint.textContent = 'Tap a category below to see its items and add them to your order.';
+  itemsContainer.appendChild(hint);
+
+  MENU.forEach(function (group, groupIndex) {
+    var panelId = 'order-panel-' + groupIndex;
+    var ids = group.items.concat(group.addons || []).map(function (i) { return i.id; });
+
     var section = document.createElement('div');
     section.className = 'order-category';
-    section.innerHTML = '<h3>' + group.category + '</h3>';
+
+    var toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'order-cat-toggle';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', panelId);
+    toggle.innerHTML =
+      '<span class="order-cat-name">' + group.category + '</span>' +
+      '<span class="order-cat-badge" hidden></span>' +
+      '<span class="order-cat-chevron" aria-hidden="true">&#9662;</span>';
+
+    var panel = document.createElement('div');
+    panel.className = 'order-cat-panel';
+    panel.id = panelId;
+
+    var panelInner = document.createElement('div');
+    panelInner.className = 'order-cat-panel-inner';
 
     group.items.forEach(function (item) {
       var row = buildRow(item);
       rowResetters.push(row._setQty);
-      section.appendChild(row);
+      panelInner.appendChild(row);
     });
 
     if (group.addons && group.addons.length) {
       var addonLabel = document.createElement('p');
       addonLabel.className = 'order-category-sub';
       addonLabel.textContent = 'Add-ons';
-      section.appendChild(addonLabel);
+      panelInner.appendChild(addonLabel);
 
       group.addons.forEach(function (item) {
         var row = buildRow(item);
         rowResetters.push(row._setQty);
-        section.appendChild(row);
+        panelInner.appendChild(row);
       });
     }
 
+    panel.appendChild(panelInner);
+    section.appendChild(toggle);
+    section.appendChild(panel);
     itemsContainer.appendChild(section);
+
+    toggle.addEventListener('click', function () {
+      var isOpen = section.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    categoryMeta.push({ ids: ids, badgeEl: toggle.querySelector('.order-cat-badge') });
   });
+
+  function updateCategoryBadges() {
+    categoryMeta.forEach(function (meta) {
+      var count = 0, subtotal = 0;
+      meta.ids.forEach(function (id) {
+        var qty = cart[id] || 0;
+        count += qty;
+        subtotal += qty * itemLookup[id].price;
+      });
+      if (count > 0) {
+        meta.badgeEl.textContent = count + (count === 1 ? ' item · ' : ' items · ') + fmt(subtotal);
+        meta.badgeEl.hidden = false;
+      } else {
+        meta.badgeEl.hidden = true;
+      }
+    });
+  }
 
   var summaryList = document.getElementById('order-summary-list');
   var totalEl = document.getElementById('order-total');
@@ -229,6 +306,7 @@ function initOrderBuilder() {
   var noteEl = document.getElementById('order-note');
 
   function renderSummary() {
+    updateCategoryBadges();
     var ids = Object.keys(cart).filter(function (id) { return cart[id] > 0; });
 
     if (ids.length === 0) {
