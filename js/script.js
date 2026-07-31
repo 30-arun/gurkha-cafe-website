@@ -46,8 +46,33 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   initOrderBuilder();
+  initMenuTabs();
   initScrollSpy();
 });
+
+function initMenuTabs() {
+  var grid = document.getElementById('menu-grid');
+  var tabs = document.querySelectorAll('.menu-tab');
+  if (!grid || !tabs.length) return;
+
+  var panels = grid.querySelectorAll('.menu-card');
+  grid.classList.add('js-tabs-enabled');
+
+  function activate(index) {
+    tabs.forEach(function (tab, i) {
+      tab.classList.toggle('active', i === index);
+    });
+    panels.forEach(function (panel, i) {
+      panel.classList.toggle('active', i === index);
+    });
+  }
+
+  tabs.forEach(function (tab, i) {
+    tab.addEventListener('click', function () { activate(i); });
+  });
+
+  activate(0);
+}
 
 function initScrollSpy() {
   var sections = document.querySelectorAll('section[id]');
